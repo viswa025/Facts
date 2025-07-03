@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Facts - Local News</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Facts - District News Chat</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>Facts</h1>
     <nav>
-      <a href="#">For You</a>
-      <a href="#">Local</a>
-      <a href="#">National</a>
-      <a href="#">International</a>
+      <button onclick="loadSection('foryou')">For You</button>
+      <button onclick="loadSection('local')">Local</button>
+      <button onclick="loadSection('national')">National</button>
+      <button onclick="loadSection('international')">International</button>
     </nav>
   </header>
 
   <main>
-    <section class="news-list" id="news-list">
+    <section id="news-list" class="news-list">
       <p>Loading headlines...</p>
     </section>
 
-    <section class="chat-box" id="chat-box" style="display:none;">
-      <h2 id="news-title"></h2>
-      <div class="qa-log" id="qa-log"></div>
-      <input type="text" id="question" placeholder="Ask a question..." />
+    <section class="chat-box" id="chat-box" style="display: none;">
+      <h2 id="news-title">News Title</h2>
+      <div id="qa-log" class="qa-log"></div>
+      <input type="text" id="question" placeholder="Ask your question here..." />
     </section>
   </main>
+
+  <footer>
+    <p>© 2025 Facts | Designed by Viswa</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
