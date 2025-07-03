@@ -1,0 +1,33 @@
+
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background: #f7f7f7;
+}
+header {
+  background: #111;
+  color: #fff;
+  padding: 1rem;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+nav a {
+  color: white;
+  text-decoration: none;
+}
+.news-card {
+  background: white;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.chat-box {
+  background: white;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+}
