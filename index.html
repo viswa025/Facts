@@ -3,23 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Facts - District News Chat</title>
+  <title>Facts - AI News</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>Facts</h1>
     <nav>
-      <button onclick="loadSection('foryou')">For You</button>
-      <button onclick="loadSection('local')">Local</button>
-      <button onclick="loadSection('national')">National</button>
-      <button onclick="loadSection('international')">International</button>
+      <span id="location-label">📍 Detecting location...</span>
     </nav>
   </header>
 
   <main>
     <section id="news-list" class="news-list">
-      <p>Loading headlines...</p>
+      <p>Loading local headlines...</p>
     </section>
 
     <section class="chat-box" id="chat-box" style="display: none;">
