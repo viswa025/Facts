@@ -4,7 +4,8 @@ const qaLog = document.getElementById('qa-log');
 const newsTitle = document.getElementById('news-title');
 const questionInput = document.getElementById('question');
 
-fetch('https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=7cba2a33d3ea4342b5edfa51cf802319')
+// Using a reliable source for real headlines
+fetch('https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=7cba2a33d3ea4342b5edfa51cf802319')
   .then(res => res.json())
   .then(data => {
     newsList.innerHTML = '';
