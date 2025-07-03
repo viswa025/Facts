@@ -16,22 +16,8 @@ nav {
   display: flex;
   justify-content: center;
   background-color: #ffffff;
-  padding: 0.5rem 0;
-  gap: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-nav button {
-  background: #e6e6e6;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  padding: 0.5rem;
   font-weight: 500;
-  cursor: pointer;
-}
-
-nav button:hover {
-  background-color: #d0d0d0;
 }
 
 .news-card {
