@@ -1,81 +1,94 @@
-# Create a debug version of the Facts app with helpful logging and fallback messages
+const gnewsKey = "ab645ae55f26daa49575e11723271b7e";
+const openrouterKey = "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";
 
-# Define debug version of script.js
-debug_script_js = """
 const newsList = document.getElementById('news-list');
 const chatBox = document.getElementById('chat-box');
 const qaLog = document.getElementById('qa-log');
 const newsTitle = document.getElementById('news-title');
 const questionInput = document.getElementById('question');
+const locationLabel = document.getElementById('location-label');
 
-console.log("✅ Script loaded. Starting app...");
+let selectedHeadline = "";
 
-// Check if essential elements exist
-if (!newsList || !chatBox || !qaLog || !newsTitle || !questionInput) {
-  console.error("❌ One or more required DOM elements are missing.");
+navigator.geolocation.getCurrentPosition(
+  async (pos) => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const city = await getCityName(lat, lon);
+    locationLabel.innerText = `📍 ${city}`;
+    loadLocalNews(city);
+  },
+  () => {
+    locationLabel.innerText = "📍 Chennai (default)";
+    loadLocalNews("Chennai");
+  }
+);
+
+async function getCityName(lat, lon) {
+  try {
+    const res = await fetch(`https://geocode.maps.co/reverse?lat=${lat}&lon=${lon}`);
+    const data = await res.json();
+    return data.address.city || data.address.town || data.address.state || "India";
+  } catch {
+    return "India";
+  }
 }
 
-// Fetch news from NewsAPI (bbc-news)
-fetch('https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=7cba2a33d3ea4342b5edfa51cf802319')
-  .then(res => {
-    console.log("📡 NewsAPI response status:", res.status);
-    if (!res.ok) throw new Error("Failed to fetch news from API");
-    return res.json();
-  })
-  .then(data => {
-    newsList.innerHTML = '';
-    if (data.articles.length === 0) {
-      console.warn("⚠️ NewsAPI returned 0 articles.");
-      newsList.innerHTML = '<p>No news articles found.</p>';
-    } else {
-      console.log("📰 Loaded articles:", data.articles.length);
+function loadLocalNews(city) {
+  fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(city)}&lang=en&country=in&token=${gnewsKey}`)
+    .then(res => res.json())
+    .then(data => {
+      newsList.innerHTML = '';
+      if (!data.articles || data.articles.length === 0) {
+        newsList.innerHTML = "<p>No local news found.</p>";
+        return;
+      }
       data.articles.forEach(article => {
-        const div = document.createElement('div');
-        div.className = 'news-card';
+        const div = document.createElement("div");
+        div.className = "news-card";
         div.innerText = article.title;
         div.onclick = () => openChat(article.title);
         newsList.appendChild(div);
       });
-    }
-  })
-  .catch(err => {
-    console.error("❌ Error fetching news:", err.message);
-    newsList.innerHTML = '<p style="color:red;">Failed to load news. Check your internet or API key.</p>';
-  });
-
-function openChat(title) {
-  console.log("💬 Opening chat for:", title);
-  newsTitle.innerText = title;
-  chatBox.style.display = 'block';
-  qaLog.innerHTML = `
-    <p><strong>User:</strong> How many people were involved?</p>
-    <p><strong>Facts:</strong> Based on early reports, details are still emerging. Stay tuned for updates.</p>
-  `;
+    })
+    .catch(() => {
+      newsList.innerHTML = "<p>Failed to load news. Check your API key or internet.</p>";
+    });
 }
 
-questionInput.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && questionInput.value.trim()) {
-    console.log("📨 User asked:", questionInput.value);
-    qaLog.innerHTML += '<p><strong>User:</strong> ' + questionInput.value + '</p>';
-    qaLog.innerHTML += '<p><strong>Facts:</strong> (Answer coming soon...)</p>';
+function openChat(title) {
+  selectedHeadline = title;
+  newsTitle.innerText = title;
+  qaLog.innerHTML = '';
+  chatBox.style.display = 'block';
+}
+
+questionInput.addEventListener("keydown", async function (e) {
+  if (e.key === "Enter" && questionInput.value.trim()) {
+    const userQ = questionInput.value;
     questionInput.value = '';
+    qaLog.innerHTML += `<p><strong>User:</strong> ${userQ}</p>`;
+    qaLog.innerHTML += `<p><strong>Facts:</strong> Thinking...</p>`;
+    
+    const response = await askAI(`${selectedHeadline} — ${userQ}`);
+    const factsReply = `<p><strong>Facts:</strong> ${response}</p>`;
+    qaLog.innerHTML = qaLog.innerHTML.replace("Thinking...", response);
   }
 });
-"""
 
-# Use previous HTML/CSS from styled version
-debug_path = "/mnt/data/Facts_Debug"
-os.makedirs(debug_path, exist_ok=True)
+async function askAI(prompt) {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openrouterKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "mistralai/mixtral-8x7b-instruct",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
 
-# Write all 3 files
-with open(f"{debug_path}/index.html", "w") as f:
-    f.write(ui_html)
-
-with open(f"{debug_path}/style.css", "w") as f:
-    f.write(ui_css)
-
-with open(f"{debug_path}/script.js", "w") as f:
-    f.write(debug_script_js)
-
-# Package as a zip
-shutil.make_archive(debug_path, 'zip', debug_path)
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "Sorry, I couldn’t understand that.";
+}
