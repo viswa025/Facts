@@ -2,33 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Facts - AI News</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facts UI Enhanced</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Facts</h1>
-    <nav>
-      <span id="location-label">📍 Detecting location...</span>
-    </nav>
-  </header>
 
-  <main>
-    <section id="news-list" class="news-list">
-      <p>Loading local headlines...</p>
-    </section>
+  <div class="navbar">
+    <div class="logo"></div>
 
-    <section class="chat-box" id="chat-box" style="display: none;">
-      <h2 id="news-title">News Title</h2>
-      <div id="qa-log" class="qa-log"></div>
-      <input type="text" id="question" placeholder="Ask your question here..." />
-    </section>
-  </main>
+    <div class="nav-button">
+      <button onclick="toggleDropdown('drop1')">FOR YOU <span>⌄</span></button>
+      <div id="drop1" class="dropdown">
+        <a href="#">Trending</a>
+        <a href="#">Suggested</a>
+        <a href="#">Saved</a>
+      </div>
+    </div>
 
-  <footer>
-    <p>© 2025 Facts | Designed by Viswa</p>
-  </footer>
+    <div class="nav-button">
+      <button onclick="toggleDropdown('drop2')">LOCAL <span>⌄</span></button>
+      <div id="drop2" class="dropdown">
+        <a href="#">Chennai</a>
+        <a href="#">Mumbai</a>
+        <a href="#">Bangalore</a>
+      </div>
+    </div>
+
+    <div class="nav-button">
+      <button onclick="toggleDropdown('drop3')">NATIONAL <span>⌄</span></button>
+      <div id="drop3" class="dropdown">
+        <a href="#">Politics</a>
+        <a href="#">Economy</a>
+        <a href="#">Education</a>
+      </div>
+    </div>
+
+    <div class="nav-button">
+      <button onclick="toggleDropdown('drop4')">INTERNATIONAL <span>⌄</span></button>
+      <div id="drop4" class="dropdown">
+        <a href="#">World News</a>
+        <a href="#">Tech</a>
+        <a href="#">Science</a>
+      </div>
+    </div>
+
+    <div class="gear-icon">⚙️</div>
+  </div>
+
+  <div class="waves">
+    <svg viewBox="0 0 1440 320">
+      <path fill="#f4cac2" fill-opacity="0.3" d="M0,160L60,154.7C120,149,240,139,360,133.3C480,128,600,128,720,138.7C840,149,960,171,1080,165.3C1200,160,1320,128,1380,112L1440,96L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+      <path fill="#c2e0dd" fill-opacity="0.6" d="M0,224L60,229.3C120,235,240,245,360,234.7C480,224,600,192,720,176C840,160,960,160,1080,176C1200,192,1320,224,1380,240L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+      <path fill="#a9d2ca" fill-opacity="1" d="M0,288L60,272C120,256,240,224,360,197.3C480,171,600,149,720,149.3C840,149,960,171,1080,176C1200,181,1320,171,1380,165.3L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+    </svg>
+  </div>
 
   <script src="script.js"></script>
 </body>
