@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lazy News Reader (Live)</title>
+    <title>Facts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -51,21 +51,16 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex justify-between items-center">
                     <h1 class="text-3xl font-bold text-gray-900">
-                        <span class="text-indigo-600">Lazy</span> News
+                        <span class="text-indigo-600">Facts</span>
                     </h1>
                     <nav class="hidden md:flex space-x-8">
                         <a href="#" class="nav-link text-lg font-medium text-gray-600 active" data-category="national">National</a>
-                        <a href="#" class="nav-link text-lg font-medium text-gray-600" data-category="local">Local</a>
                         <a href="#" class="nav-link text-lg font-medium text-gray-600" data-category="international">International</a>
                     </nav>
                 </div>
-                 <div class="flex justify-between items-center mt-2">
-                    <p id="location-display" class="text-sm text-gray-500">Detecting location...</p>
-                 </div>
                 <nav class="md:hidden mt-4">
                     <div class="flex justify-around">
                         <a href="#" class="nav-link text-md font-medium text-gray-600 active" data-category="national">National</a>
-                        <a href="#" class="nav-link text-md font-medium text-gray-600" data-category="local">Local</a>
                         <a href="#" class="nav-link text-md font-medium text-gray-600" data-category="international">International</a>
                     </div>
                 </nav>
@@ -111,13 +106,12 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', () => {
             const newsContainer = document.getElementById('news-container');
             const loader = document.getElementById('loader');
             const navLinks = document.querySelectorAll('.nav-link');
-            const locationDisplay = document.getElementById('location-display');
             
             // Chatbot UI elements
             const chatbotToggle = document.getElementById('chatbot-toggle');
@@ -128,7 +122,6 @@
             const chatSend = document.getElementById('chat-send');
 
             let currentNewsHeadlines = [];
-            let currentLocation = { city: 'your city', country: 'your country' };
             let currentCategory = 'national';
             
             // Firebase state
@@ -142,7 +135,6 @@
                     
                     if (!firebaseConfig.apiKey) {
                         console.error("Firebase config is missing.");
-                        locationDisplay.textContent = "Error: App configuration is missing.";
                         return;
                     }
 
@@ -167,48 +159,7 @@
                     }
                 } catch (error) {
                     console.error("Firebase Initialization Error:", error);
-                    locationDisplay.textContent = "Could not initialize application.";
                 }
-            }
-
-            // --- Location Services ---
-            function getLocation() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(showPosition, showError);
-                } else {
-                    locationDisplay.textContent = "Geolocation is not supported by this browser.";
-                    fetchNews(currentCategory);
-                }
-            }
-
-            function showPosition(position) {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                // Use a reverse geocoding API or service to get city/country from lat/lon
-                // For this example, we'll ask Gemini to figure it out based on context.
-                currentLocation = { lat, lon };
-                locationDisplay.textContent = `Location Detected. Fetching local news...`;
-                // If the user is on the local tab, refresh news.
-                if (currentCategory === 'local') {
-                    fetchNews('local');
-                }
-            }
-
-            function showError(error) {
-                let errorMsg = "Could not detect location. Showing default news.";
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMsg = "Location access denied. Please enable it in your browser settings.";
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMsg = "Location information is unavailable.";
-                        break;
-                    case error.TIMEOUT:
-                        errorMsg = "The request to get user location timed out.";
-                        break;
-                }
-                locationDisplay.textContent = errorMsg;
-                fetchNews(currentCategory); 
             }
 
             // --- News Fetching and Display ---
@@ -218,10 +169,10 @@
                 currentNewsHeadlines = [];
 
                 try {
-                    const articles = await generateNewsWithGemini(category);
+                    const articles = await fetchBbcNews(category);
                     currentNewsHeadlines = articles.map(a => a.title);
 
-                    if (articles.length === 0) {
+                    if (!articles || articles.length === 0) {
                         newsContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">Could not fetch live news. Please try again later.</p>';
                     } else {
                         articles.forEach(article => {
@@ -239,61 +190,33 @@
                 }
             };
 
-            async function generateNewsWithGemini(category) {
-                let prompt = '';
-                switch (category) {
-                    case 'local':
-                        // Gemini can infer location from coordinates or a general prompt
-                        prompt = `Summarize the top 5 latest local news headlines for the area around latitude ${currentLocation.lat}, longitude ${currentLocation.lon}. Be very specific to the city or region.`;
-                        if (!currentLocation.lat) {
-                             prompt = 'Summarize the top 5 latest local news headlines for Tirunelveli, Tamil Nadu, India. Be very specific to the city or region.';
-                             locationDisplay.textContent = "Showing news for Tirunelveli, Tamil Nadu (Default)";
-                        }
-                        break;
-                    case 'international':
-                        prompt = 'Summarize the top 5 latest major international news headlines.';
-                        break;
-                    case 'national':
-                    default:
-                        prompt = 'Summarize the top 5 latest national news headlines for India.';
-                        break;
-                }
+            async function fetchBbcNews(category, retries = 3, delay = 1000) {
+                let bbcUrl = 'https://bbc-news-api.vercel.app/';
+                bbcUrl += category === 'national' ? 'latest?lang=english' : 'news?lang=english';
                 
-                const fullPrompt = `${prompt} For each headline, provide a title and a one-sentence summary. Format the output as a JSON array of objects, where each object has a "title" and a "summary" key. Example: [{"title": "Example Title", "summary": "Example summary."}]`;
+                // Using a CORS proxy to bypass browser restrictions
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(bbcUrl)}`;
 
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: fullPrompt }] }],
-                    tools: [{ "google_search": {} }],
-                     generationConfig: {
-                        responseMimeType: "application/json",
-                     }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (!text) return [];
-
-                // Gemini will return a JSON string, so we parse it.
                 try {
-                    const parsed = JSON.parse(text);
-                    // Update location display if local news was fetched successfully
-                    if (category === 'local' && parsed.length > 0 && currentLocation.lat) {
-                        locationDisplay.textContent = `Showing local news for your detected area.`;
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
                     }
-                    return parsed;
-                } catch (e) {
-                    console.error("Failed to parse JSON response from Gemini:", text);
-                    return []; // Return empty array on parsing error
+                    const data = await response.json();
+                    return data.map(item => ({
+                        title: item.title,
+                        summary: item.description 
+                    }));
+                } catch (error) {
+                    console.error(`Attempt failed: ${error.message}`);
+                    if (retries > 0) {
+                        console.log(`Retrying... (${retries} attempts left)`);
+                        await new Promise(res => setTimeout(res, delay));
+                        return fetchBbcNews(category, retries - 1, delay * 2);
+                    } else {
+                        console.error("All retries failed for fetching BBC news.");
+                        throw error;
+                    }
                 }
             }
 
@@ -323,7 +246,6 @@
                 onSnapshot(q, (snapshot) => {
                     const messages = [];
                     snapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
-                    // Sort by timestamp client-side
                     messages.sort((a,b) => a.timestamp?.toMillis() - b.timestamp?.toMillis());
                     renderMessages(messages);
                 });
@@ -386,13 +308,14 @@
                 
                 CURRENT NEWS HEADLINES:
                 - ${newsContext}`;
+                
+                const fullPrompt = `${systemPrompt}\n\nUSER QUERY: ${userQuery}`;
 
                 const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
+                    contents: [{ parts: [{ text: fullPrompt }] }],
                     tools: [{ "google_search": {} }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
                 };
 
                 const response = await fetch(apiUrl, {
@@ -426,7 +349,6 @@
             // --- Initial Load ---
             async function main() {
                 await initFirebase();
-                getLocation(); // This will trigger the initial news fetch
                 fetchNews('national');
             }
 
@@ -435,4 +357,3 @@
     </script>
 </body>
 </html>
-
