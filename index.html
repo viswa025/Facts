@@ -203,7 +203,23 @@
                         throw new Error(`API request failed with status ${response.status}`);
                     }
                     const data = await response.json();
-                    return data.map(item => ({
+                    
+                    let articlesArray = null;
+
+                    if (Array.isArray(data)) {
+                        articlesArray = data; // Handles cases where the API returns a direct array
+                    } else if (data && data.Latest && Array.isArray(data.Latest)) {
+                        articlesArray = data.Latest; // Handles the object format for 'latest'
+                    } else if (data && data.News && Array.isArray(data.News)) {
+                        articlesArray = data.News; // Handles a potential object format for 'news'
+                    }
+
+                    if (articlesArray === null) {
+                        console.error("API response is not in a recognized array format:", data);
+                        throw new Error("Invalid data format from news API.");
+                    }
+
+                    return articlesArray.map(item => ({
                         title: item.title,
                         summary: item.description 
                     }));
@@ -357,3 +373,4 @@
     </script>
 </body>
 </html>
+
