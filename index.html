@@ -221,7 +221,7 @@
 
                     return articlesArray.map(item => ({
                         title: item.title,
-                        summary: item.description 
+                        summary: item.summary || ''
                     }));
                 } catch (error) {
                     console.error(`Attempt failed: ${error.message}`);
@@ -320,17 +320,17 @@
 
             async function callChatbotAPI(userQuery) {
                 const newsContext = currentNewsHeadlines.join('\n- ');
-                const systemPrompt = `You are a helpful and concise news assistant. Use your real-time search capabilities to answer user questions about the provided news headlines.
-                
-                CURRENT NEWS HEADLINES:
-                - ${newsContext}`;
-                
-                const fullPrompt = `${systemPrompt}\n\nUSER QUERY: ${userQuery}`;
+                const systemPrompt = `You are a helpful and concise news assistant. Use your real-time search capabilities to answer user questions about the provided news headlines.`;
+                const userPrompt = `Based on these headlines:\n- ${newsContext}\n\nMy question is: ${userQuery}`;
 
                 const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
                 const payload = {
-                    contents: [{ parts: [{ text: fullPrompt }] }],
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
                     tools: [{ "google_search": {} }],
                 };
 
